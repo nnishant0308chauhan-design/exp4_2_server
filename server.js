@@ -1,83 +1,86 @@
 const express = require("express");
+const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
+// Middleware
+app.use(cors());
 app.use(express.json());
 
+// In-memory data (temporary database)
 let cards = [
-  { id: 1, rank: "Ace", suit: "Spades", color: "Black" },
-  { id: 2, rank: "King", suit: "Hearts", color: "Red" }
+  { id: 1, suit: "Hearts", value: "A" },
+  { id: 2, suit: "Spades", value: "K" }
 ];
 
+// Root Route
 app.get("/", (req, res) => {
-  res.send("Playing Card API is running");
+  res.send("Playing Card REST API is running 🚀");
 });
 
+// GET all cards
 app.get("/cards", (req, res) => {
   res.json(cards);
 });
 
+// GET single card by ID
 app.get("/cards/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const card = cards.find(c => c.id === id);
-
+  const card = cards.find(c => c.id === parseInt(req.params.id));
   if (!card) {
     return res.status(404).json({ message: "Card not found" });
   }
-
   res.json(card);
 });
 
+// POST add new card
 app.post("/cards", (req, res) => {
-  const { rank, suit, color } = req.body;
+  const { suit, value } = req.body;
 
-  if (!rank || !suit || !color) {
-    return res.status(400).json({ message: "All fields required" });
+  if (!suit || !value) {
+    return res.status(400).json({ message: "Suit and Value required" });
   }
 
   const newCard = {
-    id: cards.length ? cards[cards.length - 1].id + 1 : 1,
-    rank,
+    id: cards.length + 1,
     suit,
-    color
+    value
   };
 
   cards.push(newCard);
-
   res.status(201).json(newCard);
 });
 
+// PUT update card
 app.put("/cards/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const card = cards.find(c => c.id === id);
+  const card = cards.find(c => c.id === parseInt(req.params.id));
 
   if (!card) {
     return res.status(404).json({ message: "Card not found" });
   }
 
-  const { rank, suit, color } = req.body;
+  const { suit, value } = req.body;
 
-  if (rank) card.rank = rank;
   if (suit) card.suit = suit;
-  if (color) card.color = color;
+  if (value) card.value = value;
 
   res.json(card);
 });
 
+// DELETE card
 app.delete("/cards/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = cards.findIndex(c => c.id === id);
+  const cardIndex = cards.findIndex(c => c.id === parseInt(req.params.id));
 
-  if (index === -1) {
+  if (cardIndex === -1) {
     return res.status(404).json({ message: "Card not found" });
   }
 
-  const deletedCard = cards.splice(index, 1);
-
-  res.json({ message: "Card deleted", deletedCard });
+  cards.splice(cardIndex, 1);
+  res.json({ message: "Card deleted successfully" });
 });
 
+// 🔥 IMPORTANT FOR RENDER
+const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
